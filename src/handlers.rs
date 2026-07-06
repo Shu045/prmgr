@@ -7,23 +7,31 @@ use std::io;
 
 pub fn handle_action(app: &mut App) -> io::Result<()> {
     if let Event::Key(key) = event::read()? {
+        // Keys that always work
+        match key.code {
+            KeyCode::Up => {
+                move_up(app);
+                return Ok(());
+            }
+            KeyCode::Down => {
+                move_down(app);
+                return Ok(());
+            }
+            _ => {}
+        }
+
         match app.mode {
             InputMode::Normal => handle_normal_input(app, key),
             InputMode::Command => handle_command_input(app, key),
         }
     }
+
     Ok(())
 }
 
 fn handle_normal_input(app: &mut App, key: KeyEvent) {
     match key.code {
-        KeyCode::Char('q') if app.command.is_empty() => {
-            app.exit = true;
-        }
-
-        KeyCode::Up => move_up(app),
-
-        KeyCode::Down => move_down(app),
+        KeyCode::Char('q') if app.command.is_empty() => app.exit = true,
 
         KeyCode::Char(':') if app.command.is_empty() => {
             app.mode = InputMode::Command;
@@ -37,48 +45,55 @@ fn handle_normal_input(app: &mut App, key: KeyEvent) {
         }
 
         KeyCode::Backspace => {
-            app.command.pop();
-            app.apply_filter();
+            if !app.command.is_empty() {
+                app.command.pop();
+                app.apply_filter();
+            }
         }
 
         _ => {}
     }
 }
+
 fn handle_command_input(app: &mut App, key: KeyEvent) {
     match key.code {
-        KeyCode::Char(c) => {
-            app.command.push(c);
-        }
+        KeyCode::Char(c) => app.command.push(c),
 
         KeyCode::Backspace => {
             app.command.pop();
 
             if app.command.is_empty() {
-                app.mode = InputMode::Normal;
-                app.apply_filter();
+                leave_command_mode(app);
             }
         }
 
         KeyCode::Enter => {
-            let cmd = app.command.trim_start_matches(':').to_string();
-            app.command = cmd;
-
+            app.command = app.command.trim_start_matches(':').to_string();
             execute_command(app);
-
-            app.command.clear();
-            app.mode = InputMode::Normal;
-            app.apply_filter();
+            leave_command_mode(app);
         }
 
-        KeyCode::Esc => {
-            app.command.clear();
-            app.mode = InputMode::Normal;
-            app.apply_filter();
+        KeyCode::Tab => {
+            if let Some(selected) = app.table_state.selected() {
+                if let Some(process) = app.processes.get(selected) {
+                    app.command.push(' ');
+                    app.command.push_str(&process.pid.to_string());
+                }
+            }
         }
+
+        KeyCode::Esc => leave_command_mode(app),
 
         _ => {}
     }
 }
+
+fn leave_command_mode(app: &mut App) {
+    app.command.clear();
+    app.mode = InputMode::Normal;
+    app.apply_filter();
+}
+
 fn execute_command(app: &mut App) {
     let command_line = app.command.clone();
 
@@ -88,11 +103,8 @@ fn execute_command(app: &mut App) {
     let argument: &str = parts.next().unwrap_or("");
 
     match Command::from_str(command) {
-        Command::Search => {}
-
         Command::Kill => kill_process(app, argument),
-
-        Command::Unknown => {}
+        Command::Search | Command::Unknown => {}
     }
 }
 
@@ -111,6 +123,7 @@ fn move_down(app: &mut App) {
         app.table_state.select(Some(selected + 1));
     }
 }
+
 fn kill_process(app: &mut App, pid_str: &str) {
     let Ok(pid_num) = pid_str.parse::<usize>() else {
         return;
