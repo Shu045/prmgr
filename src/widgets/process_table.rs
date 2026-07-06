@@ -28,9 +28,7 @@ pub fn draw(frame: &mut Frame, area: Rect, app: &mut app::App) {
             .add_modifier(Modifier::BOLD),
     );
 
-    let rows = app.filtered_processes.iter().map(|&i| {
-        let p = &app.processes[i];
-
+    let rows = app.processes.iter().map(|p| {
         Row::new([
             p.pid.to_string(),
             p.name.clone(),
@@ -55,15 +53,14 @@ pub fn draw(frame: &mut Frame, area: Rect, app: &mut app::App) {
     .row_highlight_style(Style::default().bg(Color::Green).fg(Color::White))
     .highlight_symbol("▶ ");
 
-    let text = if matches!(app.mode, InputMode::Command) {
-        app.command.as_str()
-    } else {
-        app.search_query.as_str()
-    };
+    let text = app.command.as_str();
 
     let search = Paragraph::new(text).block(
         Block::bordered()
-            .title("Command")
+            .title(match app.mode {
+                InputMode::Normal => "Search",
+                InputMode::Command => "Command",
+            })
             .border_type(BorderType::Rounded),
     );
 

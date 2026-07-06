@@ -8,7 +8,7 @@ use std::io;
 use std::time::{Duration, Instant};
 use sysinfo::{ProcessesToUpdate, System};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ProcessInfo {
     pub pid: sysinfo::Pid,
     pub name: String,
@@ -23,11 +23,10 @@ pub struct App {
     pub sys: System,
     pub cpu_history: VecDeque<f64>,
     pub memory_history: VecDeque<f64>,
+    pub all_processes: Vec<ProcessInfo>,
     pub processes: Vec<ProcessInfo>,
-    pub filtered_processes: Vec<usize>,
     pub table_state: TableState,
     pub last_process_refresh: Instant,
-    pub search_query: String,
     pub command: String,
     pub mode: InputMode,
 }
@@ -39,11 +38,10 @@ impl App {
             sys: System::new_all(),
             cpu_history: VecDeque::new(),
             memory_history: VecDeque::new(),
+            all_processes: Vec::new(),
             processes: Vec::new(),
-            filtered_processes: Vec::new(),
             table_state: TableState::new(),
             last_process_refresh: Instant::now(),
-            search_query: String::new(),
             command: String::new(),
             mode: InputMode::Normal,
         }
@@ -72,7 +70,7 @@ impl App {
     pub fn update_processes(&mut self) {
         self.sys.refresh_processes(ProcessesToUpdate::All, true);
 
-        self.processes = self
+        self.all_processes = self
             .sys
             .processes()
             .iter()
@@ -85,12 +83,14 @@ impl App {
             })
             .collect();
 
-        self.processes
+        self.all_processes
             .sort_by(|a, b| b.cpu.partial_cmp(&a.cpu).unwrap_or(Ordering::Equal));
 
-        self.update_process_table();
+        self.apply_filter();
 
-        self.update_filtered_processes();
+        if self.table_state.selected().is_none() && !self.processes.is_empty() {
+            self.table_state.select(Some(0));
+        }
     }
 
     fn update_cpu(&mut self) {
@@ -114,29 +114,29 @@ impl App {
         }
     }
 
-    pub fn update_filtered_processes(&mut self) {
-        let query = self.search_query.to_lowercase();
+    pub fn apply_filter(&mut self) {
+        if matches!(self.mode, InputMode::Command) {
+            self.processes = self.all_processes.clone();
+            return;
+        }
 
-        self.filtered_processes = self
-            .processes
+        let query = self.command.to_lowercase();
+
+        self.processes = self
+            .all_processes
             .iter()
-            .enumerate()
-            .filter(|(_, p)| query.is_empty() || p.name.to_lowercase().contains(&query))
-            .map(|(i, _)| i)
+            .filter(|p| query.is_empty() || p.name.to_lowercase().contains(&query))
+            .cloned()
             .collect();
 
-        let selected = self.table_state.selected().unwrap_or(0);
-
-        if self.filtered_processes.is_empty() {
+        if self.processes.is_empty() {
             self.table_state.select(None);
-        } else if selected >= self.filtered_processes.len() {
-            self.table_state.select(Some(0));
-        }
-    }
+        } else {
+            let selected = self.table_state.selected().unwrap_or(0);
 
-    fn update_process_table(&mut self) {
-        if self.table_state.selected().is_none() {
-            self.table_state.select(Some(0));
+            if selected >= self.processes.len() {
+                self.table_state.select(Some(0));
+            }
         }
     }
     fn draw(&mut self, frame: &mut Frame) {

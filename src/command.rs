@@ -3,6 +3,8 @@ pub enum InputMode {
     Normal,
     Command,
 }
+
+#[derive(Debug, PartialEq, Eq)]
 pub enum Command {
     Search,
     Kill,

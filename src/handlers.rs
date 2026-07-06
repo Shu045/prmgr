@@ -17,12 +17,28 @@ pub fn handle_action(app: &mut App) -> io::Result<()> {
 
 fn handle_normal_input(app: &mut App, key: KeyEvent) {
     match key.code {
-        event::KeyCode::Char('q') => app.exit = true,
-        event::KeyCode::Up => move_up(app),
-        event::KeyCode::Down => move_down(app),
-        event::KeyCode::Char(':') => {
+        KeyCode::Char('q') if app.command.is_empty() => {
+            app.exit = true;
+        }
+
+        KeyCode::Up => move_up(app),
+
+        KeyCode::Down => move_down(app),
+
+        KeyCode::Char(':') if app.command.is_empty() => {
             app.mode = InputMode::Command;
-            app.command.clear();
+            app.command.push(':');
+            app.apply_filter();
+        }
+
+        KeyCode::Char(c) => {
+            app.command.push(c);
+            app.apply_filter();
+        }
+
+        KeyCode::Backspace => {
+            app.command.pop();
+            app.apply_filter();
         }
 
         _ => {}
@@ -33,25 +49,36 @@ fn handle_command_input(app: &mut App, key: KeyEvent) {
         KeyCode::Char(c) => {
             app.command.push(c);
         }
+
         KeyCode::Backspace => {
             app.command.pop();
+
+            if app.command.is_empty() {
+                app.mode = InputMode::Normal;
+                app.apply_filter();
+            }
         }
 
         KeyCode::Enter => {
+            let cmd = app.command.trim_start_matches(':').to_string();
+            app.command = cmd;
+
             execute_command(app);
-            app.mode = InputMode::Command;
+
             app.command.clear();
+            app.mode = InputMode::Normal;
+            app.apply_filter();
         }
 
         KeyCode::Esc => {
             app.command.clear();
             app.mode = InputMode::Normal;
+            app.apply_filter();
         }
 
         _ => {}
     }
 }
-
 fn execute_command(app: &mut App) {
     let command_line = app.command.clone();
 
@@ -61,11 +88,7 @@ fn execute_command(app: &mut App) {
     let argument: &str = parts.next().unwrap_or("");
 
     match Command::from_str(command) {
-        Command::Search => {
-            app.search_query = argument.to_string();
-            app.update_filtered_processes();
-            app.filtered_processes.clear();
-        }
+        Command::Search => {}
 
         Command::Kill => kill_process(app, argument),
 
