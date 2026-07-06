@@ -10,7 +10,9 @@ fn main() -> std::io::Result<()> {
     let mut terminal = ratatui::init();
     let mut app = App::new();
 
-    app.run(&mut terminal)?;
+    let result = app.run(&mut terminal);
 
-    Ok(())
+    ratatui::restore();
+
+    result
 }

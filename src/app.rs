@@ -23,6 +23,7 @@ pub struct App {
     pub sys: System,
     pub cpu_history: VecDeque<f64>,
     pub memory_history: VecDeque<f64>,
+    pub process_history: Vec<usize>,
     pub all_processes: Vec<ProcessInfo>,
     pub processes: Vec<ProcessInfo>,
     pub table_state: TableState,
@@ -38,6 +39,7 @@ impl App {
             sys: System::new_all(),
             cpu_history: VecDeque::new(),
             memory_history: VecDeque::new(),
+            process_history: Vec::new(),
             all_processes: Vec::new(),
             processes: Vec::new(),
             table_state: TableState::new(),
@@ -49,9 +51,10 @@ impl App {
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while !self.exit {
-            if self.last_process_refresh.elapsed() >= Duration::from_secs(1) {
+            if self.last_process_refresh.elapsed() >= Duration::from_millis(3000) {
                 self.update_processes();
                 self.last_process_refresh = Instant::now();
+                self.update_process_count();
             }
 
             self.update_cpu();
@@ -111,6 +114,18 @@ impl App {
 
         if self.memory_history.len() > 100 {
             self.memory_history.pop_front();
+        }
+    }
+
+    pub fn update_process_count(&mut self) {
+        let count = self.sys.processes().len();
+
+        const MAX: usize = 60;
+
+        self.process_history.push(count);
+
+        if self.process_history.len() > MAX {
+            self.process_history.remove(0);
         }
     }
 

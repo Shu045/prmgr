@@ -7,7 +7,6 @@ use std::io;
 
 pub fn handle_action(app: &mut App) -> io::Result<()> {
     if let Event::Key(key) = event::read()? {
-        // Keys that always work
         match key.code {
             KeyCode::Up => {
                 move_up(app);
@@ -97,7 +96,7 @@ fn leave_command_mode(app: &mut App) {
 fn execute_command(app: &mut App) {
     let command_line = app.command.clone();
 
-    let mut parts = command_line.splitn(2, ' ');
+    let mut parts = command_line.split_whitespace();
 
     let command: &str = parts.next().unwrap_or("");
     let argument: &str = parts.next().unwrap_or("");

@@ -1,6 +1,6 @@
 use crate::{
     app::App,
-    widgets::{cpu_graph, memory_graph},
+    widgets::{cpu_graph, memory_graph, process_graph},
 };
 use ratatui::{
     Frame,
@@ -18,11 +18,16 @@ pub fn draw(frame: &mut Frame, area: Rect, app: &App) {
 
     let inner = block.inner(area);
 
-    let [cpu_graph_area, memory_graph_area] =
-        Layout::vertical([Constraint::Min(0), Constraint::Min(0)]).areas(inner);
+    let [cpu_graph_area, memory_graph_area, process_graph_area] = Layout::vertical([
+        Constraint::Length(5),
+        Constraint::Length(5),
+        Constraint::Length(5),
+    ])
+    .areas(inner);
 
     cpu_graph::draw(frame, cpu_graph_area, app);
     memory_graph::draw(frame, memory_graph_area, app);
+    process_graph::draw(frame, process_graph_area, app);
 
     frame.render_widget(block, area);
 }

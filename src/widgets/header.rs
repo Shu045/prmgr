@@ -10,7 +10,6 @@ use sysinfo::System;
 use crate::app::App;
 
 pub fn draw(frame: &mut Frame, area: Rect, _app: &App) {
-    // ---------- System Info ----------
     let uptime = System::uptime();
     let days = uptime / 86_400;
     let hours = (uptime % 86_400) / 3_600;
@@ -30,7 +29,6 @@ pub fn draw(frame: &mut Frame, area: Rect, _app: &App) {
 
     let formatted_os_info = format!("OS: {}\nKernel: {}\nHost: {}", os, kernel, hostname);
 
-    // ---------- Layout ----------
     let [title_area, stats_area, os_area] = Layout::horizontal([
         Constraint::Length(20),
         Constraint::Length(30),
@@ -40,7 +38,6 @@ pub fn draw(frame: &mut Frame, area: Rect, _app: &App) {
 
     let border_style = Style::default().fg(Color::Rgb(255, 182, 193));
 
-    // ---------- App Title ----------
     frame.render_widget(
         Paragraph::new("PRMGR")
             .alignment(Alignment::Center)
@@ -53,7 +50,6 @@ pub fn draw(frame: &mut Frame, area: Rect, _app: &App) {
         title_area,
     );
 
-    // ---------- Load + Uptime ----------
     frame.render_widget(
         Paragraph::new(formatted_stats)
             .alignment(Alignment::Center)
@@ -66,7 +62,6 @@ pub fn draw(frame: &mut Frame, area: Rect, _app: &App) {
         stats_area,
     );
 
-    // ---------- OS Info ----------
     frame.render_widget(
         Paragraph::new(formatted_os_info).block(
             Block::bordered()

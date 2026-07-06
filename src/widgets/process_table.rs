@@ -33,7 +33,7 @@ pub fn draw(frame: &mut Frame, area: Rect, app: &mut app::App) {
             p.pid.to_string(),
             p.name.clone(),
             format!("{:.1}", p.cpu),
-            format!("{:.1} MB", p.memory as f64 / 1024.0),
+            format!("{:.1} MB", bytes_to_mb(p.memory)),
             p.status.clone(),
         ])
     });
@@ -67,4 +67,8 @@ pub fn draw(frame: &mut Frame, area: Rect, app: &mut app::App) {
     frame.render_widget(search, header_area);
     frame.render_widget(block, area);
     frame.render_stateful_widget(table, table_area, &mut app.table_state);
+}
+
+fn bytes_to_mb(bytes: u64) -> f64 {
+    bytes as f64 / 1024.0 / 1024.0
 }
