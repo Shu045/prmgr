@@ -1,5 +1,5 @@
-mod action;
 mod app;
+mod command;
 mod handlers;
 mod ui;
 mod widgets;

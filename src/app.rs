@@ -1,11 +1,12 @@
-use crate::{action::Action, handlers, ui};
-use crossterm::event::{self, Event, KeyCode, KeyEvent};
+use crate::command::InputMode;
+use crate::{handlers, ui};
+use crossterm::event::{self};
 use ratatui::{DefaultTerminal, Frame, widgets::TableState};
 use std::cmp::Ordering;
 use std::collections::VecDeque;
 use std::io;
 use std::time::{Duration, Instant};
-use sysinfo::{ProcessesToUpdate, Signal, System};
+use sysinfo::{ProcessesToUpdate, System};
 
 #[derive(Debug)]
 pub struct ProcessInfo {
@@ -20,14 +21,15 @@ pub struct ProcessInfo {
 pub struct App {
     pub exit: bool,
     pub sys: System,
-    pub selected: usize,
     pub cpu_history: VecDeque<f64>,
     pub memory_history: VecDeque<f64>,
     pub processes: Vec<ProcessInfo>,
+    pub filtered_processes: Vec<usize>,
     pub table_state: TableState,
     pub last_process_refresh: Instant,
     pub search_query: String,
-    pub search_mode: bool,
+    pub command: String,
+    pub mode: InputMode,
 }
 
 impl App {
@@ -35,14 +37,15 @@ impl App {
         Self {
             exit: false,
             sys: System::new_all(),
-            selected: 0,
             cpu_history: VecDeque::new(),
             memory_history: VecDeque::new(),
-            processes: vec![],
+            processes: Vec::new(),
+            filtered_processes: Vec::new(),
             table_state: TableState::new(),
             last_process_refresh: Instant::now(),
             search_query: String::new(),
-            search_mode: false,
+            command: String::new(),
+            mode: InputMode::Normal,
         }
     }
 
@@ -59,40 +62,11 @@ impl App {
             terminal.draw(|frame| self.draw(frame))?;
 
             if event::poll(Duration::from_millis(200))? {
-                self.handle_action()?;
+                handlers::handle_action(self)?;
             }
         }
 
         Ok(())
-    }
-
-    fn update(&mut self, action: Action) {
-        match action {
-            Action::Quit => self.exit = true,
-
-            Action::MoveUp => self.move_up(),
-
-            Action::MoveDown => self.move_down(),
-
-            Action::KillProcess => {
-                self.kill_selected_process();
-            }
-
-            Action::Refresh => {
-                self.sys.refresh_all();
-            }
-
-            Action::StartSearch => {
-                self.search_mode = true;
-                self.search_query.clear(); // Optional
-            }
-
-            Action::StopSearch => {
-                self.search_mode = false;
-            }
-
-            Action::None => {}
-        }
     }
 
     pub fn update_processes(&mut self) {
@@ -115,6 +89,8 @@ impl App {
             .sort_by(|a, b| b.cpu.partial_cmp(&a.cpu).unwrap_or(Ordering::Equal));
 
         self.update_process_table();
+
+        self.update_filtered_processes();
     }
 
     fn update_cpu(&mut self) {
@@ -138,81 +114,32 @@ impl App {
         }
     }
 
+    pub fn update_filtered_processes(&mut self) {
+        let query = self.search_query.to_lowercase();
+
+        self.filtered_processes = self
+            .processes
+            .iter()
+            .enumerate()
+            .filter(|(_, p)| query.is_empty() || p.name.to_lowercase().contains(&query))
+            .map(|(i, _)| i)
+            .collect();
+
+        let selected = self.table_state.selected().unwrap_or(0);
+
+        if self.filtered_processes.is_empty() {
+            self.table_state.select(None);
+        } else if selected >= self.filtered_processes.len() {
+            self.table_state.select(Some(0));
+        }
+    }
+
     fn update_process_table(&mut self) {
         if self.table_state.selected().is_none() {
             self.table_state.select(Some(0));
         }
     }
-
-    fn kill_selected_process(&mut self) {
-        let Some(selected) = self.table_state.selected() else {
-            return;
-        };
-
-        let Some(info) = self.processes.get(selected) else {
-            return;
-        };
-
-        if let Some(process) = self.sys.process(info.pid) {
-            process.kill_with(Signal::Term);
-
-            // Refresh the process list afterwards
-            self.update_processes();
-        }
-    }
-
-    pub fn move_down(&mut self) {
-        let selected = self.table_state.selected().unwrap_or(0);
-
-        if selected + 1 < self.processes.len() {
-            self.table_state.select(Some(selected + 1));
-        }
-    }
-
-    pub fn move_up(&mut self) {
-        let selected = self.table_state.selected().unwrap_or(0);
-
-        if selected > 0 {
-            self.table_state.select(Some(selected - 1));
-        }
-    }
-
     fn draw(&mut self, frame: &mut Frame) {
         ui::draw(frame, self)
-    }
-
-    fn handle_action(&mut self) -> io::Result<()> {
-        if let Event::Key(key) = event::read()? {
-            if self.search_mode {
-                self.handle_search_input(key);
-                return Ok(());
-            }
-
-            let action = handlers::key_to_action(key);
-            self.update(action);
-        }
-
-        Ok(())
-    }
-    fn handle_search_input(&mut self, key: KeyEvent) {
-        match key.code {
-            KeyCode::Esc => {
-                self.search_mode = false;
-            }
-
-            KeyCode::Enter => {
-                self.search_mode = false;
-            }
-
-            KeyCode::Backspace => {
-                self.search_query.pop();
-            }
-
-            KeyCode::Char(c) => {
-                self.search_query.push(c);
-            }
-
-            _ => {}
-        }
     }
 }
