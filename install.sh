@@ -3,7 +3,7 @@
 set -e
 
 VERSION="v1.0.0"
-URL="https://github.com/<username>/<repo>/releases/download/${VERSION}/prmgr"
+URL="https://github.com/Shu045/prmgr/blob/main/install.sh"
 
 INSTALL_DIR="$HOME/.prmgr/bin"
 
