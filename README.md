@@ -75,14 +75,7 @@ cargo run
 
 ## Screenshots
 
-
-```
-docs/screenshot.png
-```
-
-```md
 ![prmgr Screenshot](docs/screenshot.png)
-```
 
 ## Roadmap
 
