@@ -8,6 +8,7 @@ pub enum InputMode {
 pub enum Command {
     Search,
     Kill,
+    RefreshTime,
     Unknown,
 }
 
@@ -16,6 +17,8 @@ impl Command {
         match s.to_lowercase().as_str() {
             "search" => Command::Search,
             "kill" => Command::Kill,
+            "refresh" => Command::RefreshTime,
+
             _ => Command::Unknown,
         }
     }
