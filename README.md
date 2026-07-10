@@ -1,56 +1,75 @@
+````markdown
+```text
+
+██████╗ ██████╗ ███╗   ███╗ ██████╗ ██████╗
+██╔══██╗██╔══██╗████╗ ████║██╔════╝ ██╔══██╗
+██████╔╝██████╔╝██╔████╔██║██║  ███╗██████╔╝
+██╔═══╝ ██╔══██╗██║╚██╔╝██║██║   ██║██╔══██╗
+██║     ██║  ██║██║ ╚═╝ ██║╚██████╔╝██║  ██║
+╚═╝     ╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝
+```
+
 # prmgr
 
-A fast, lightweight terminal-based process manager written in Rust using Ratatui.
+A fast, lightweight, keyboard-first terminal process manager written in Rust with Ratatui.
 
-`prmgr` provides a modern TUI for monitoring system processes, viewing resource usage, and interacting with running processes directly from your terminal.
+`prmgr` lets you monitor system processes, visualize resource usage, search running processes, and execute Vim-inspired commands—all without leaving your terminal.
 
-## Features
+---
 
-* 📊 Live CPU usage graph
-* 💾 Live memory usage graph
-* 📋 Interactive process table
-* 🔍 Process search
-* ⌨️ Keyboard-driven interface
-* ⚡ Fast and lightweight
-* 🦀 Written entirely in Rust
+## ✨ Features
 
-## Installation
+- 📊 Live CPU usage graph
+- 💾 Live memory usage graph
+- 📋 Interactive process table
+- 🔍 Real-time process search
+- ⌨️ Keyboard-first workflow
+- ⚡ Vim-inspired command mode
+- 🎯 Tab completion for selected process PID
+- 🚀 Fast and lightweight
+- 🦀 Written entirely in Rust
+
+---
+
+## 📦 Installation
 
 ### Linux
 
-Install the latest release with:
+Install the latest release:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Shu045/prmgr/main/install.sh | bash
 ```
 
-After installation, simply run:
+Run:
 
 ```bash
 prmgr
 ```
 
-## Building from Source
+---
+
+## 🔨 Building from Source
 
 ### Prerequisites
 
-* Rust (latest stable)
-* Cargo
+- Rust (latest stable)
+- Cargo
 
 Clone the repository:
 
 ```bash
-git clone git@github.com:Shu045/prmgr.git
+git clone https://github.com/Shu045/prmgr.git
 cd prmgr
 ```
 
-Build a release binary:
+Build:
 
 ```bash
 cargo build --release
 ```
 
-Run directly:
+Run the release binary:
 
 ```bash
 ./target/release/prmgr
@@ -62,38 +81,84 @@ Or run in development mode:
 cargo run
 ```
 
-## Controls
+---
 
-| Key   | Action             |
-| ----- | ------------------ |
-| ↑ / ↓ | Navigate processes |
-| `/`   | Search processes   |
-| `Esc` | Exit search mode   |
-| `q`   | Quit               |
+## ⌨️ Keyboard Shortcuts
 
-> The key bindings may evolve as new features are added.
+| Key | Action |
+|------|--------|
+| `↑` / `↓` | Navigate process list |
+| `/` | Start process search |
+| `:` | Enter command mode |
+| `Tab` | Insert selected process PID into the search/command |
+| `Esc` | Exit search or command mode |
+| `q` | Quit |
 
-## Screenshots
+---
+
+## 📝 Command Mode
+
+`prmgr` includes a Vim-inspired command mode.
+
+Press `:` to enter command mode.
+
+### Available Commands
+
+| Command | Description |
+|----------|-------------|
+| `:kill <pid>` | Kill a process by PID |
+
+### Example
+
+```text
+:kill 1234
+```
+
+### Tip
+
+While typing a command, press **Tab** to automatically insert the PID of the currently selected process.
+
+Example:
+
+```text
+:kill<Tab>
+```
+
+becomes
+
+```text
+:kill 1234
+```
+
+---
+
+## 📸 Screenshot
 
 ![prmgr Screenshot](docs/screenshot.png)
 
-## Roadmap
+---
 
-* [ ] Kill selected process
-* [ ] Sort by CPU usage
-* [ ] Sort by memory usage
-* [ ] Process filtering
-* [ ] Network usage graph
-* [ ] Disk I/O statistics
-* [ ] Multi-platform releases
-* [ ] Automatic update checker
+## 🛣️ Roadmap
 
-## Contributing
+- [ ] Sort by CPU usage
+- [ ] Sort by memory usage
+- [ ] Process filtering
+- [ ] Network usage graph
+- [ ] Disk I/O statistics
+- [ ] Multi-platform releases
+- [ ] Automatic update checker
 
-Contributions, issues, and feature requests are welcome.
+---
+
+## 🤝 Contributing
+
+Contributions, bug reports, and feature requests are always welcome.
 
 If you have an idea or find a bug, feel free to open an issue or submit a pull request.
 
-## License
+---
+
+## 📄 License
 
 This project is licensed under the MIT License.
+````
