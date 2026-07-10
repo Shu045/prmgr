@@ -103,6 +103,8 @@ fn execute_command(app: &mut App) {
 
     match Command::from_str(command) {
         Command::Kill => kill_process(app, argument),
+        Command::RefreshTime => update_refresh(app, argument),
+
         Command::Search | Command::Unknown => {}
     }
 }
@@ -135,4 +137,12 @@ fn kill_process(app: &mut App, pid_str: &str) {
     }
 
     app.update_processes();
+}
+
+fn update_refresh(app: &mut App, argument: &str) {
+    let Ok(refresh_time) = argument.parse::<u64>() else {
+        return;
+    };
+
+    app.refresh = refresh_time;
 }

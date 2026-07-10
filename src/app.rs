@@ -22,6 +22,7 @@ pub struct App {
     pub exit: bool,
     pub sys: System,
     pub cpu_history: VecDeque<f64>,
+    pub refresh: u64,
     pub memory_history: VecDeque<f64>,
     pub process_history: Vec<usize>,
     pub all_processes: Vec<ProcessInfo>,
@@ -39,6 +40,7 @@ impl App {
             sys: System::new_all(),
             cpu_history: VecDeque::new(),
             memory_history: VecDeque::new(),
+            refresh: 500,
             process_history: Vec::new(),
             all_processes: Vec::new(),
             processes: Vec::new(),
@@ -51,7 +53,7 @@ impl App {
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while !self.exit {
-            if self.last_process_refresh.elapsed() >= Duration::from_millis(3000) {
+            if self.last_process_refresh.elapsed() >= Duration::from_millis(self.refresh) {
                 self.update_processes();
                 self.last_process_refresh = Instant::now();
                 self.update_process_count();
